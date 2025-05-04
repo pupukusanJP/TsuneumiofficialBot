@@ -22,22 +22,9 @@ async def on_ready():
     except Exception as e:
         print(f"Failed to sync commands: {e}")
 
-@bot.tree.command(name="emoji", description="サーバーのすべての絵文字を表示")
-async def emoji(interaction: discord.Interaction):
-    guild = interaction.guild
-    if not guild:
-        await interaction.response.send_message("このコマンドはサーバー内でのみ使用できます。", ephemeral=True)
-        return
-
-    emojis = guild.emojis
-    if not emojis:
-        await interaction.response.send_message("このサーバーにはカスタム絵文字がありません。", ephemeral=True)
-        return
-
-    embed = discord.Embed(title=f"{guild.name} の絵文字一覧", color=discord.Color.blue())
-    emoji_list = [f"{emoji} `{emoji.name}`" for emoji in emojis]
-    embed.description = "\n".join(emoji_list)
-
-    await interaction.response.send_message(embed=embed)
+@bot.tree.command(name="uwaa", description="うわー！")
+async def send(ctx):
+        await ctx.send('こんにちは！私はBotです。')
 
 bot.run(TOKEN)
+
