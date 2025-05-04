@@ -1,1 +1,1 @@
-start: python DiscordEmoziBot.py
+start: python Main.py
