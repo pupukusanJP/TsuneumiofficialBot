@@ -15,21 +15,23 @@ bot = commands.Bot(command_prefix="/", intents=intents)
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
     try:
-        synced = await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+        # グローバルコマンドとして同期
+        synced = await bot.tree.sync()
         print(f"🔁 Synced {len(synced)} command(s)")
     except Exception as e:
         print(f"❌ Sync error: {e}")
 
-@bot.tree.command(name="omikuzi", description="おみくじを引きます", guild=discord.Object(id=GUILD_ID))
+@bot.tree.command(name="omikuzi", description="おみくじを引きます")
 async def omikuzi(interaction: discord.Interaction):
     fortunes = ["大吉", "中吉", "小吉", "末吉", "凶", "大凶"]
     result = random.choice(fortunes)
     await interaction.response.send_message(f"🎴 あなたの運勢は… **{result}**！")
 
-@bot.tree.command(name="luckycolor", description="今日のラッキーカラーを教えます", guild=discord.Object(id=GUILD_ID))
+@bot.tree.command(name="luckycolor", description="今日のラッキーカラーを教えます")
 async def luckycolor(interaction: discord.Interaction):
     colors = ["赤", "青", "黄色", "緑", "紫", "ピンク", "白", "黒"]
     color = random.choice(colors)
     await interaction.response.send_message(f"🎨 今日のラッキーカラーは **{color}** です！")
 
 bot.run(TOKEN)
+
