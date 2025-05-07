@@ -5,6 +5,7 @@ from flask import Flask
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
+import platform
 
 # .envファイルからトークンを読み込む
 load_dotenv()
