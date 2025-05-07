@@ -84,6 +84,17 @@ async def tsuneumi(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed)
 
+@bot.tree.command(name="routeMap", description="常海電鉄の路線図を送信します")
+async def tsuneumi(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="路線図",
+        description="常海電鉄の路線図だよ",
+        color=discord.Color.blue()
+    )
+    embed.set_image(url="https://img.atwiki.jp/rbxjptrain/attach/403/2427/%E8%B7%AF%E7%B7%9A%E5%9B%B3.png")
+
+    await interaction.response.send_message(embed=embed)
+
 # Webサーバーとボットを並行して実行
 keep_alive()
 bot.run(TOKEN)
