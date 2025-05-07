@@ -9,7 +9,12 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
+# 特定のギルドIDを指定
+GUILD_ID = 1258077953326190713  # ギルドIDを設定
+
 intents = discord.Intents.default()
+intents.message_content = True  # メッセージコンテンツインテントを有効にする
+
 bot = commands.Bot(command_prefix="/", intents=intents)
 
 # FlaskでUptimeRobotのPingを受け付ける
@@ -32,17 +37,15 @@ async def on_ready():
     await bot.change_presence(
         activity=discord.Game(name="常海電鉄")
     )
-    # コマンド同期を非同期で行う
-    bot.loop.create_task(sync_commands())
-
-async def sync_commands():
-    try:
-        # 必要な場合にだけギルドごとに同期することも可能
-        # synced = await bot.tree.sync(guild=guild)  # 特定のギルドに対して同期
-        synced = await bot.tree.sync()  # 全体に対して同期
-        print(f"🔁 Synced {len(synced)} command(s)")
-    except Exception as e:
-        print(f"❌ Sync error: {e}")
+    
+    # ギルドIDが一致する場合のみコマンドを同期
+    guild = discord.utils.get(bot.guilds, id=GUILD_ID)
+    if guild:
+        try:
+            synced = await bot.tree.sync(guild=guild)  # ギルド指定で同期
+            print(f"🔁 Synced {len(synced)} command(s) for guild {guild.name}")
+        except Exception as e:
+            print(f"❌ Sync error: {e}")
 
 # おみくじコマンド
 @bot.tree.command(name="omikuzi", description="おみくじを引きます")
@@ -64,13 +67,12 @@ async def tsuneumi(interaction: discord.Interaction):
         description="常海のロゴだよ！",
         color=discord.Color.blue()
     )
-    embed.set_image(url="https://img.atwiki.jp/rbxjptrain/attach/403/2403/%E5%90%8D%E7%A7%B0%E6%9C%AA%E8%A8%AD%E5%AE%9A%E3%81%AE%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%20%284%29.png")  # ←ここを実際の画像URLに変更
+    embed.set_image(url="https://img.atwiki.jp/rbxjptrain/attach/403/2403/%E5%90%8D%E7%A7%B0%E6%9C%AA%E8%A8%AD%E5%AE%9A%E3%81%AE%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%20%284%29.png")
 
     await interaction.response.send_message(embed=embed)
 
 keep_alive()
 bot.run(TOKEN)
 
-bot.run(TOKEN)
 
 
