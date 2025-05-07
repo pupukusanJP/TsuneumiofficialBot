@@ -100,7 +100,7 @@ async def hi(interaction: discord.Interaction):
     await interaction.response.send_message(f"hi")
 
 @bot.tree.command(name="botinfo", description="Botの情報を送信します")
-async def tsuneumi(interaction: discord.Interaction):
+async def botinfo(interaction: discord.Interaction):
     # Bot情報の埋め込みメッセージ
     embed = discord.Embed(
         title="Botの情報",
