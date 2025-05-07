@@ -84,7 +84,7 @@ async def tsuneumi(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed)
 
-@bot.tree.command(name="routeMap", description="常海電鉄の路線図を送信します")
+@bot.tree.command(name="routemap", description="常海電鉄の路線図を送信します")
 async def tsuneumi(interaction: discord.Interaction):
     embed = discord.Embed(
         title="路線図",
