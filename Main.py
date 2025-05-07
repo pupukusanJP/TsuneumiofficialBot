@@ -99,6 +99,27 @@ async def routemap(interaction: discord.Interaction):
 async def hi(interaction: discord.Interaction):
     await interaction.response.send_message(f"hi")
 
+@bot.tree.command(name="botinfo", description="Botの情報を送信します")
+async def tsuneumi(interaction: discord.Interaction):
+    # Bot情報の埋め込みメッセージ
+    embed = discord.Embed(
+        title="Botの情報",
+        description="以下はBotの詳細情報です。",
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="Bot名", value=bot.user.name, inline=True)
+    embed.add_field(name="BotのID", value=bot.user.id, inline=True)
+    embed.add_field(name="サーバー数", value=len(bot.guilds), inline=True)
+    embed.add_field(name="ユーザー数", value=len([member for guild in bot.guilds for member in guild.members]), inline=True)
+    embed.add_field(name="BotのPing", value=f"{round(bot.latency * 1000)}ms", inline=True)
+    embed.add_field(name="使用している言語", value="Python", inline=True)
+    embed.add_field(name="Pythonのバージョン", value=platform.python_version(), inline=True)
+    embed.set_footer(text=f"Botの作成者: pupuku_777")
+    
+    # メッセージ送信
+    await interaction.response.send_message(embed=embed)
+
+
 # Webサーバーとボットを並行して実行
 keep_alive()
 bot.run(TOKEN)
