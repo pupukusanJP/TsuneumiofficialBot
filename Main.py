@@ -6,15 +6,18 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
+# .envファイルからトークンを読み込む
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
 # 特定のギルドIDを指定
 GUILD_ID = 1258077953326190713  # ギルドIDを設定
 
+# ボットのインテントを設定
 intents = discord.Intents.default()
 intents.message_content = True  # メッセージコンテンツインテントを有効にする
 
+# ボットの初期化
 bot = commands.Bot(command_prefix="/", intents=intents)
 
 # FlaskでUptimeRobotのPingを受け付ける
@@ -24,6 +27,7 @@ app = Flask(__name__)
 def home():
     return "Bot is running!"
 
+# Webサーバーを別スレッドで実行
 def run():
     app.run(host="0.0.0.0", port=8080)
 
@@ -31,21 +35,28 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
+# ボットが準備できたときに呼ばれるイベント
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
-    await bot.change_presence(
-        activity=discord.Game(name="常海電鉄")
-    )
-    
-    # ギルドIDが一致する場合のみコマンドを同期
+    await bot.change_presence(activity=discord.Game(name="常海電鉄"))
+
+    try:
+        # コマンドをグローバルで同期
+        await bot.tree.sync()
+        print("🔁 Synced commands globally.")
+    except Exception as e:
+        print(f"❌ Global sync error: {e}")
+
+    # ギルド同期を確認
     guild = discord.utils.get(bot.guilds, id=GUILD_ID)
     if guild:
         try:
-            synced = await bot.tree.sync(guild=guild)  # ギルド指定で同期
-            print(f"🔁 Synced {len(synced)} command(s) for guild {guild.name}")
+            # ギルド単位でコマンド同期
+            await bot.tree.sync(guild=guild)
+            print(f"🔁 Synced commands for guild {guild.name}")
         except Exception as e:
-            print(f"❌ Sync error: {e}")
+            print(f"❌ Sync error for guild {guild.name}: {e}")
 
 # おみくじコマンド
 @bot.tree.command(name="omikuzi", description="おみくじを引きます")
@@ -54,12 +65,14 @@ async def omikuzi(interaction: discord.Interaction):
     result = random.choice(fortunes)
     await interaction.response.send_message(f"🎴 あなたの運勢は… **{result}**！")
 
+# ラッキーカラーコマンド
 @bot.tree.command(name="luckycolor", description="今日のラッキーカラーを教えます")
 async def luckycolor(interaction: discord.Interaction):
     colors = ["赤", "青", "黄色", "緑", "紫", "ピンク", "白", "黒"]
     color = random.choice(colors)
     await interaction.response.send_message(f"🎨 今日のラッキーカラーは **{color}** です！")
 
+# 常海電鉄のロゴを送信するコマンド
 @bot.tree.command(name="tsuneumi", description="常海電鉄のロゴを送信します")
 async def tsuneumi(interaction: discord.Interaction):
     embed = discord.Embed(
@@ -71,6 +84,7 @@ async def tsuneumi(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed)
 
+# Webサーバーとボットを並行して実行
 keep_alive()
 bot.run(TOKEN)
 
