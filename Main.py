@@ -45,7 +45,7 @@ async def omikuzi(interaction: discord.Interaction):
     result = random.choice(fortunes)
     await interaction.response.send_message(f"🎴 あなたの運勢は… **{result}**！")
 
-@bot.tree.command(name="luckycolor", description="今日のラッキーカラーを教えます", guild=discord.Object(id=GUILD_ID))
+@bot.tree.command(name="luckycolor", description="今日のラッキーカラーを教えます")
 async def luckycolor(interaction: discord.Interaction):
     colors = ["赤", "青", "黄色", "緑", "紫", "ピンク", "白", "黒"]
     color = random.choice(colors)
