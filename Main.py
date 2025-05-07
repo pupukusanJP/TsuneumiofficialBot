@@ -32,8 +32,14 @@ async def on_ready():
     await bot.change_presence(
         activity=discord.Game(name="常海電鉄")
     )
+    # コマンド同期を非同期で行う
+    bot.loop.create_task(sync_commands())
+
+async def sync_commands():
     try:
-        synced = await bot.tree.sync()
+        # 必要な場合にだけギルドごとに同期することも可能
+        # synced = await bot.tree.sync(guild=guild)  # 特定のギルドに対して同期
+        synced = await bot.tree.sync()  # 全体に対して同期
         print(f"🔁 Synced {len(synced)} command(s)")
     except Exception as e:
         print(f"❌ Sync error: {e}")
@@ -63,6 +69,8 @@ async def tsuneumi(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 keep_alive()
+bot.run(TOKEN)
+
 bot.run(TOKEN)
 
 
