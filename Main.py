@@ -29,7 +29,7 @@ def keep_alive():
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
-        await bot.change_presence(
+    await bot.change_presence(
         activity=discord.Game(name="常海電鉄")
     )
     try:
