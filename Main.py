@@ -6,7 +6,6 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import platform
-import requests
 
 # .envファイルからトークンを読み込む
 load_dotenv()
@@ -27,10 +26,6 @@ bot = commands.Bot(command_prefix="/", intents=intents)
 # FlaskでUptimeRobotのPingを受け付ける
 app = Flask(__name__)
 
-AREA_CODES = {
-    "東京": "130000",
-    "大阪": "270000"
-}
 
 @app.route("/")
 def home():
@@ -148,30 +143,6 @@ async def allemoji(interaction: discord.Interaction):
         embed.add_field(name=f"絵文字セット {i+1}", value=" ".join(chunk), inline=False)
 
     await interaction.response.send_message(embed=embed)
-
-@bot.tree.command(name="weather", description="天気を送信します")
-@app_commands.describe(area="地域を選択してください")
-@app_commands.choices(area=[
-    app_commands.Choice(name="東京", value="130000"),
-    app_commands.Choice(name="大阪", value="270000"),
-])
-async def weather(interaction: discord.Interaction, area: app_commands.Choice[str]):
-    try:
-        url = f"https://www.jma.go.jp/bosai/forecast/data/forecast/{area.value}.json"
-        response = requests.get(url)
-        data = response.json()
-
-        forecast = data[0]['timeSeries'][0]['areas'][0]
-        weather_text = forecast['weathers'][0]
-        area_name = forecast['area']['name']
-        date = data[0]['reportDatetime']
-
-        await interaction.response.send_message(
-            f"📍 **{area_name} の天気予報**\n🗓 発表日時: {date}\n🌤 今日の天気: {weather_text}"
-        )
-
-    except Exception as e:
-        await interaction.response.send_message(f"エラーが発生しました: {e}", ephemeral=True)
 
 # Webサーバーとボットを並行して実行
 keep_alive()
