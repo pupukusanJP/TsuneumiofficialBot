@@ -17,6 +17,8 @@ GUILD_ID = 1258077953326190713  # ギルドIDを設定
 # ボットのインテントを設定
 intents = discord.Intents.default()
 intents.message_content = True  # メッセージコンテンツインテントを有効にする
+intents.emojis = True
+intents.guilds = True
 
 # ボットの初期化
 bot = commands.Bot(command_prefix="/", intents=intents)
@@ -118,6 +120,27 @@ async def botinfo(interaction: discord.Interaction):
     embed.set_footer(text=f"Botの作成者: pupuku_777")
     
     # メッセージ送信
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="allemoji", description="指定されたサーバーのすべての絵文字を送信します")
+async def allemoji(interaction: discord.Interaction):
+    guild = bot.get_guild(GUILD_ID)
+
+    if guild is None:
+        return await interaction.response.send_message("指定されたギルドが見つかりません。Botがそのサーバーに参加しているか確認してください。", ephemeral=True)
+
+    if not guild.emojis:
+        return await interaction.response.send_message("このサーバーにはカスタム絵文字がありません。", ephemeral=True)
+
+    emoji_list = [str(emoji) for emoji in guild.emojis]
+    embed = discord.Embed(title=f"{guild.name} の絵文字一覧", color=discord.Color.blurple())
+
+    chunk_size = 50
+    chunks = [emoji_list[i:i + chunk_size] for i in range(0, len(emoji_list), chunk_size)]
+
+    for i, chunk in enumerate(chunks[:25]):  # Embedフィールドは最大25
+        embed.add_field(name=f"絵文字セット {i+1}", value=" ".join(chunk), inline=False)
+
     await interaction.response.send_message(embed=embed)
 
 
