@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import platform
+import aiohttp
 
 # .envファイルからトークンを読み込む
 load_dotenv()
@@ -143,6 +144,44 @@ async def allemoji(interaction: discord.Interaction):
         embed.add_field(name=f"絵文字セット {i+1}", value=" ".join(chunk), inline=False)
 
     await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="groupinfo", description="Robloxグループの情報を取得します")
+async def groupinfo(interaction: discord.Interaction, group_id:34072257):
+    await interaction.response.defer()
+    async with aiohttp.ClientSession() as session:
+        # グループ基本情報
+        group_url = f"https://groups.roblox.com/v1/groups/{group_id}"
+        async with session.get(group_url) as resp:
+            if resp.status != 200:
+                await interaction.followup.send("グループ情報を取得できませんでした。")
+                return
+            group_data = await resp.json()
+
+        # ロール（人数）情報
+        roles_url = f"https://groups.roblox.com/v1/groups/{group_id}/roles"
+        async with session.get(roles_url) as resp:
+            if resp.status != 200:
+                await interaction.followup.send("メンバー情報を取得できませんでした。")
+                return
+            roles_data = await resp.json()
+            total_members = sum(role["memberCount"] for role in roles_data["roles"])
+
+        # オーナー
+        owner = group_data.get("owner")
+        owner_name = owner["username"] if owner else "オーナーなし"
+
+        embed = discord.Embed(
+            title=f"{group_data['name']} のグループ情報",
+            description=group_data.get('description') or "説明なし",
+            color=discord.Color.green()
+        )
+        embed.add_field(name="設立日", value=group_data.get("created", "不明"), inline=False)
+        embed.add_field(name="メンバー数", value=str(total_members), inline=True)
+        embed.add_field(name="オーナー", value=owner_name, inline=True)
+        embed.add_field(name="グループID", value=str(group_id), inline=True)
+        embed.set_thumbnail(url=group_data.get("emblemUrl", ""))
+
+        await interaction.followup.send(embed=embed)
 
 # Webサーバーとボットを並行して実行
 keep_alive()
