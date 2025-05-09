@@ -146,7 +146,9 @@ async def allemoji(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed)
 
 @bot.tree.command(name="groupinfo", description="Robloxグループの情報を取得します")
-async def groupinfo(interaction: discord.Interaction, group_id:34072257):
+async def groupinfo(interaction: discord.Interaction):
+    group_id = 34072257  # group_id をここで直接設定
+
     await interaction.response.defer()
     async with aiohttp.ClientSession() as session:
         # グループ基本情報
