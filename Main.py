@@ -56,30 +56,43 @@ async def on_message(message):
     if message.author.bot:
         return  # Botのメッセージは無視
 
-    jst = pytz.timezone('Asia/Tokyo')
     now = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(jst)
     user_id = message.author.id
 
-    # 送信時刻を追加
+    # メッセージ送信時刻を記録
     user_message_times[user_id].append(now)
 
-    # 5秒より前のデータは削除
+    # 5秒より前のメッセージは除外
     threshold = now - timedelta(seconds=5)
     user_message_times[user_id] = [t for t in user_message_times[user_id] if t > threshold]
 
-    # 5秒以内に3回以上ならスパムと判定
+    # 5秒以内に3回以上ならスパム判定
     if len(user_message_times[user_id]) >= 3:
-        # スパム報告チャンネル取得
+        # クールダウンチェック（60秒）
+        last_report = last_spam_report_time.get(user_id)
+        if last_report and (now - last_report) < timedelta(seconds=60):
+            # 60秒以内に既に報告済みならスルー
+            return
+
+        # 報告チャンネル取得
         channel = bot.get_channel(SPAM_REPORT_CHANNEL_ID)
         if channel:
-            await channel.send(
-                f"⚠️ スパム検知 ⚠️\n"
-                f"ユーザー: {message.author} (ID: {user_id})\n"
-                f"メッセージ: {message.content}\n"
-                f"チャンネル: {message.channel.mention}\n"
-                f"時間: {now.strftime('%Y-%m-%d %H:%M:%S JST')}"
+            embed = discord.Embed(
+                title="⚠️ スパム検知 ⚠️",
+                color=discord.Color.red(),
+                timestamp=now
             )
-        # メッセージ履歴クリアして連続報告を防止
+            embed.add_field(name="ユーザー", value=f"{message.author} (ID: {user_id})", inline=False)
+            embed.add_field(name="メッセージ", value=message.content or "（内容なし）", inline=False)
+            embed.add_field(name="チャンネル", value=message.channel.mention, inline=False)
+            embed.set_footer(text="検知日時（JST）")
+            
+            await channel.send(embed=embed)
+
+        # 最終報告時間を更新
+        last_spam_report_time[user_id] = now
+
+        # メッセージ履歴クリア
         user_message_times[user_id].clear()
 
     await bot.process_commands(message)
