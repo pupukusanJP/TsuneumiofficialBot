@@ -37,7 +37,7 @@ user_message_times = defaultdict(list)
 # スパム検知チャンネルID（適宜変更してください）
 SPAM_REPORT_CHANNEL_ID = 1376216186257145876
 
-
+jst = pytz.timezone('Asia/Tokyo')
 
 @app.route("/")
 def home():
