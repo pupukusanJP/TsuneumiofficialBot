@@ -10,7 +10,7 @@ import aiohttp
 import asyncio
 from collections import defaultdict
 from datetime import datetime, timedelta
-
+import pytz
 # .envファイルからトークンを読み込む
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -56,7 +56,8 @@ async def on_message(message):
     if message.author.bot:
         return  # Botのメッセージは無視
 
-    now = datetime.utcnow()
+    jst = pytz.timezone('Asia/Tokyo')
+    now = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(jst)
     user_id = message.author.id
 
     # 送信時刻を追加
@@ -76,7 +77,7 @@ async def on_message(message):
                 f"ユーザー: {message.author} (ID: {user_id})\n"
                 f"メッセージ: {message.content}\n"
                 f"チャンネル: {message.channel.mention}\n"
-                f"時間: {now.strftime('%Y-%m-%d %H:%M:%S UTC')}"
+                f"時間: {now.strftime('%Y-%m-%d %H:%M:%S JST')}"
             )
         # メッセージ履歴クリアして連続報告を防止
         user_message_times[user_id].clear()
