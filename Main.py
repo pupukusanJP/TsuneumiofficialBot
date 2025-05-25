@@ -11,6 +11,15 @@ import asyncio
 from collections import defaultdict
 from datetime import datetime, timedelta
 import pytz
+from collections import defaultdict
+
+# 既にあればOK、なければ以下を追加
+last_spam_report_time = {}
+
+# もしuser_message_timesもまだならこちらも宣言
+user_message_times = defaultdict(list)
+
+
 # .envファイルからトークンを読み込む
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
@@ -38,6 +47,7 @@ user_message_times = defaultdict(list)
 SPAM_REPORT_CHANNEL_ID = 1376216186257145876
 
 jst = pytz.timezone('Asia/Tokyo')
+
 
 @app.route("/")
 def home():
