@@ -7,6 +7,9 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import platform
 import aiohttp
+import asyncio
+from collections import defaultdict
+from datetime import datetime, timedelta
 
 # .envファイルからトークンを読み込む
 load_dotenv()
@@ -18,6 +21,7 @@ GUILD_ID = 1258077953326190713  # ギルドIDを設定
 # ボットのインテントを設定
 intents = discord.Intents.default()
 intents.message_content = True  # メッセージコンテンツインテントを有効にする
+intents.messages = True
 intents.emojis = True
 intents.guilds = True
 
@@ -26,6 +30,13 @@ bot = commands.Bot(command_prefix="/", intents=intents)
 
 # FlaskでUptimeRobotのPingを受け付ける
 app = Flask(__name__)
+
+# ユーザーIDごとのメッセージ送信時刻リストを保持
+user_message_times = defaultdict(list)
+
+# スパム検知チャンネルID（適宜変更してください）
+SPAM_REPORT_CHANNEL_ID = 1376216186257145876
+
 
 
 @app.route("/")
@@ -39,6 +50,39 @@ def run():
 def keep_alive():
     t = Thread(target=run)
     t.start()
+
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return  # Botのメッセージは無視
+
+    now = datetime.utcnow()
+    user_id = message.author.id
+
+    # 送信時刻を追加
+    user_message_times[user_id].append(now)
+
+    # 5秒より前のデータは削除
+    threshold = now - timedelta(seconds=5)
+    user_message_times[user_id] = [t for t in user_message_times[user_id] if t > threshold]
+
+    # 5秒以内に3回以上ならスパムと判定
+    if len(user_message_times[user_id]) >= 3:
+        # スパム報告チャンネル取得
+        channel = bot.get_channel(SPAM_REPORT_CHANNEL_ID)
+        if channel:
+            await channel.send(
+                f"⚠️ スパム検知 ⚠️\n"
+                f"ユーザー: {message.author} (ID: {user_id})\n"
+                f"メッセージ: {message.content}\n"
+                f"チャンネル: {message.channel.mention}\n"
+                f"時間: {now.strftime('%Y-%m-%d %H:%M:%S UTC')}"
+            )
+        # メッセージ履歴クリアして連続報告を防止
+        user_message_times[user_id].clear()
+
+    await bot.process_commands(message)
+
 
 # ボットが準備できたときに呼ばれるイベント
 @bot.event
