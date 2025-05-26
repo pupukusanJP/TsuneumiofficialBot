@@ -74,18 +74,18 @@ class UnlockButtonView(View):
             await interaction.response.send_message("❌ この操作を行う権限がありません。", ephemeral=True)
             return
 
-        current_overwrite = self.channel.overwrites_for(self.channel.guild.default_role)
-        if current_overwrite.send_messages is not False:
+        if self.channel.id not in locked_channels:
             await interaction.response.send_message("ℹ️ このチャンネルはすでに解除されています。", ephemeral=True)
             self.stop()
             return
 
+        # カテゴリーと同期して解除
         await self.channel.edit(sync_permissions=True)
         await interaction.response.send_message("✅ カテゴリーと同期してロック解除しました。", ephemeral=True)
         locked_channels.discard(self.channel.id)
         self.stop()
 
-
+# 📩 メッセージ監視イベント
 @bot.event
 async def on_message(message):
     if message.author.bot:
@@ -95,7 +95,7 @@ async def on_message(message):
     user_id = message.author.id
     channel_id = message.channel.id
 
-    # ロック中チャンネルでは非管理者のメッセージを削除
+    # 🔒 ロック中チャンネルでは非管理者のメッセージを削除
     if channel_id in locked_channels:
         if not message.author.guild_permissions.manage_messages:
             await message.delete()
@@ -107,6 +107,7 @@ async def on_message(message):
     threshold = now - timedelta(seconds=5)
     user_message_times[user_id] = [t for t in user_message_times[user_id] if t > threshold]
 
+    # スパム判定
     if len(user_message_times[user_id]) >= 3:
         last_report = last_spam_report_time.get(user_id)
         if last_report and (now - last_report) < timedelta(seconds=60):
@@ -124,10 +125,15 @@ async def on_message(message):
             embed.add_field(name="チャンネル", value=message.channel.mention, inline=False)
             embed.set_footer(text="検知日時（JST）")
 
-            # チャンネルロック処理
-            overwrite = message.channel.overwrites_for(message.guild.default_role)
-            overwrite.send_messages = False
-            await message.channel.set_permissions(message.guild.default_role, overwrite=overwrite)
+            # 🔒 全ロールの送信権限をオフ
+            for role in message.guild.roles:
+                try:
+                    overwrite = message.channel.overwrites_for(role)
+                    overwrite.send_messages = False
+                    await message.channel.set_permissions(role, overwrite=overwrite)
+                except Exception as e:
+                    print(f"[警告] ロール {role.name} に設定できませんでした: {e}")
+
             locked_channels.add(channel_id)
 
             view = UnlockButtonView(message.channel)
