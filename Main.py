@@ -63,24 +63,27 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-@discord.ui.button(label="🔓 スパム解除", style=discord.ButtonStyle.green)
-async def unlock_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-    if not interaction.user.guild_permissions.manage_channels:
-        await interaction.response.send_message("❌ この操作を行う権限がありません。", ephemeral=True)
-        return
+class UnlockButtonView(View):
+    def __init__(self, channel):
+        super().__init__(timeout=None)
+        self.channel = channel
 
-    # すでに解除されているか確認（send_messages の制限がない場合）
-    current_overwrite = self.channel.overwrites_for(self.channel.guild.default_role)
-    if current_overwrite.send_messages is not False:
-        await interaction.response.send_message("ℹ️ このチャンネルはすでに解除されています。", ephemeral=True)
+    @discord.ui.button(label="🔓 スパム解除", style=discord.ButtonStyle.green)
+    async def unlock_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not interaction.user.guild_permissions.manage_channels:
+            await interaction.response.send_message("❌ この操作を行う権限がありません。", ephemeral=True)
+            return
+
+        current_overwrite = self.channel.overwrites_for(self.channel.guild.default_role)
+        if current_overwrite.send_messages is not False:
+            await interaction.response.send_message("ℹ️ このチャンネルはすでに解除されています。", ephemeral=True)
+            self.stop()
+            return
+
+        await self.channel.edit(sync_permissions=True)
+        await interaction.response.send_message("✅ カテゴリーと同期してロック解除しました。", ephemeral=True)
+        locked_channels.discard(self.channel.id)
         self.stop()
-        return
-
-    # 親カテゴリーとパーミッションを同期
-    await self.channel.edit(sync_permissions=True)
-    await interaction.response.send_message("✅ カテゴリーの設定と同期してチャンネルのロックを解除しました。", ephemeral=True)
-    locked_channels.discard(self.channel.id)
-    self.stop()
 
 
 @bot.event
