@@ -107,7 +107,7 @@ async def on_message(message):
     threshold = now - timedelta(seconds=5)
     user_message_times[user_id] = [t for t in user_message_times[user_id] if t > threshold]
 
-    # スパム判定
+    # スパム判定（5秒以内に3回以上の投稿）
     if len(user_message_times[user_id]) >= 3:
         last_report = last_spam_report_time.get(user_id)
         if last_report and (now - last_report) < timedelta(seconds=60):
@@ -125,18 +125,18 @@ async def on_message(message):
             embed.add_field(name="チャンネル", value=message.channel.mention, inline=False)
             embed.set_footer(text="検知日時（JST）")
 
-            # 🔒 全ロールの送信権限をオフ
-            for role in message.guild.roles:
-                try:
-                    overwrite = message.channel.overwrites_for(role)
-                    overwrite.send_messages = False
-                    await message.channel.set_permissions(role, overwrite=overwrite)
-                except Exception as e:
-                    print(f"[警告] ロール {role.name} に設定できませんでした: {e}")
+            # 🔒 対象チャンネルに対して権限が設定されているロールだけを取得してロック
+            for target, overwrite in message.channel.overwrites.items():
+                if isinstance(target, discord.Role):
+                    try:
+                        overwrite.send_messages = False
+                        await message.channel.set_permissions(target, overwrite=overwrite)
+                    except Exception as e:
+                        print(f"[警告] ロール {target.name} に設定できませんでした: {e}")
 
             locked_channels.add(channel_id)
 
-            view = UnlockButtonView(message.channel)
+            view = UnlockButtonView(message.channel)  # 解除ボタンのView（ご自身の実装）
             await report_channel.send(embed=embed, view=view)
 
         last_spam_report_time[user_id] = now
