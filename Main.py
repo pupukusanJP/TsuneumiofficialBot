@@ -12,6 +12,8 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 import pytz
 from collections import defaultdict
+from discord.ext import commands
+from discord.ui import View, Button
 
 # 既にあればOK、なければ以下を追加
 last_spam_report_time = {}
@@ -29,10 +31,10 @@ GUILD_ID = 1258077953326190713  # ギルドIDを設定
 
 # ボットのインテントを設定
 intents = discord.Intents.default()
-intents.message_content = True  # メッセージコンテンツインテントを有効にする
 intents.messages = True
-intents.emojis = True
 intents.guilds = True
+intents.message_content = True
+intents.members = True
 
 # ボットの初期化
 bot = commands.Bot(command_prefix="/", intents=intents)
@@ -61,32 +63,52 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
+class UnlockButtonView(View):
+    def __init__(self, channel):
+        super().__init__(timeout=None)
+        self.channel = channel
+
+    @discord.ui.button(label="🔓 スパム解除", style=discord.ButtonStyle.green)
+    async def unlock_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not interaction.user.guild_permissions.manage_channels:
+            await interaction.response.send_message("❌ この操作を行う権限がありません。", ephemeral=True)
+            return
+        
+        overwrite = self.channel.overwrites_for(self.channel.guild.default_role)
+        overwrite.send_messages = True
+        await self.channel.set_permissions(self.channel.guild.default_role, overwrite=overwrite)
+        await interaction.response.send_message("✅ チャンネルのロックを解除しました。", ephemeral=True)
+        locked_channels.discard(self.channel.id)
+        self.stop()
+
 @bot.event
 async def on_message(message):
     if message.author.bot:
-        return  # Botのメッセージは無視
+        return
 
     now = datetime.utcnow().replace(tzinfo=pytz.utc).astimezone(jst)
     user_id = message.author.id
+    channel_id = message.channel.id
 
-    # メッセージ送信時刻を記録
+    # ロック中チャンネルでは非管理者のメッセージを削除
+    if channel_id in locked_channels:
+        if not message.author.guild_permissions.manage_messages:
+            await message.delete()
+            return
+
     user_message_times[user_id].append(now)
 
-    # 5秒より前のメッセージは除外
+    # 5秒以内の履歴のみ保持
     threshold = now - timedelta(seconds=5)
     user_message_times[user_id] = [t for t in user_message_times[user_id] if t > threshold]
 
-    # 5秒以内に3回以上ならスパム判定
     if len(user_message_times[user_id]) >= 3:
-        # クールダウンチェック（60秒）
         last_report = last_spam_report_time.get(user_id)
         if last_report and (now - last_report) < timedelta(seconds=60):
-            # 60秒以内に既に報告済みならスルー
             return
 
-        # 報告チャンネル取得
-        channel = bot.get_channel(SPAM_REPORT_CHANNEL_ID)
-        if channel:
+        report_channel = bot.get_channel(SPAM_REPORT_CHANNEL_ID)
+        if report_channel:
             embed = discord.Embed(
                 title="⚠️ スパム検知 ⚠️",
                 color=discord.Color.red(),
@@ -96,13 +118,17 @@ async def on_message(message):
             embed.add_field(name="メッセージ", value=message.content or "（内容なし）", inline=False)
             embed.add_field(name="チャンネル", value=message.channel.mention, inline=False)
             embed.set_footer(text="検知日時（JST）")
-            
-            await channel.send(embed=embed)
 
-        # 最終報告時間を更新
+            # チャンネルロック処理
+            overwrite = message.channel.overwrites_for(message.guild.default_role)
+            overwrite.send_messages = False
+            await message.channel.set_permissions(message.guild.default_role, overwrite=overwrite)
+            locked_channels.add(channel_id)
+
+            view = UnlockButtonView(message.channel)
+            await report_channel.send(embed=embed, view=view)
+
         last_spam_report_time[user_id] = now
-
-        # メッセージ履歴クリア
         user_message_times[user_id].clear()
 
     await bot.process_commands(message)
