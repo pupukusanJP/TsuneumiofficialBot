@@ -53,7 +53,7 @@ jst = pytz.timezone('Asia/Tokyo')
 
 @app.route("/")
 def home():
-    return "Bot is running!"
+    return "ボットは稼働中です！"
 
 # Webサーバーを別スレッドで実行
 def run():
@@ -108,7 +108,7 @@ async def on_message(message):
     user_message_times[user_id] = [t for t in user_message_times[user_id] if t > threshold]
 
     # スパム判定（5秒以内に3回以上の投稿）
-    if len(user_message_times[user_id]) >= 3:
+    if len(user_message_times[user_id]) >= 4:
         last_report = last_spam_report_time.get(user_id)
         if last_report and (now - last_report) < timedelta(seconds=60):
             return
