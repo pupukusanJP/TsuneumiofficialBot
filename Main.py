@@ -43,20 +43,24 @@ def send_message():
     data = request.get_json()
     player_name = data.get("player", "Unknown Player")
 
-    embed = {
-        "title": "🎮 プレイヤー参加ログ",
-        "description": f"{player_name} さんがゲームに参加しました！",
-        "color": 0x3498db,
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    payload = {"embeds": [embed]}
-    headers = {"Content-Type": "application/json"}
+    # Embedをdiscord.Embedで作成
+    embed = discord.Embed(
+        title="🎮 プレイヤー参加ログ",
+        description=f"{player_name} さんがゲームに参加しました！",
+        color=0x3498db,
+        timestamp=datetime.utcnow()
+    )
 
-    response = requests.post(DISCORD_WEBHOOK_URL, json=payload, headers=headers)
-    if response.status_code in [200, 204]:
-        return jsonify({"status": "success"}), 200
-    else:
-        return jsonify({"status": "error", "code": response.status_code}), 500
+    # 非同期でBotのイベントループ上でメッセージ送信処理を実行
+    async def send_embed():
+        channel = bot.get_channel(CHANNEL_ID)
+        if channel:
+            await channel.send(embed=embed)
+
+    # discord.pyは非同期なのでasyncio.run_coroutine_threadsafeでイベントループに流す
+    asyncio.run_coroutine_threadsafe(send_embed(), bot.loop)
+
+    return jsonify({"status": "success"}), 200
 
 
 # --- Discord Bot設定 ---
