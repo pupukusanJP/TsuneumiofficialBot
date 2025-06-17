@@ -1,7 +1,7 @@
 import os
 import random
 from threading import Thread
-from flask import Flask
+from flask import Flask, request, jsonify
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -84,6 +84,38 @@ class UnlockButtonView(View):
         await interaction.response.send_message("✅ カテゴリーと同期してロック解除しました。", ephemeral=True)
         locked_channels.discard(self.channel.id)
         self.stop()
+
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+
+@app.route("/send-message", methods=["POST"])
+def send_message():
+    data = request.get_json()
+    player_name = data.get("player", "Unknown Player")
+
+    embed = {
+        "title": "🎮 プレイヤー参加ログ",
+        "description": f"{player_name} さんがゲームに参加しました！",
+        "color": 0x3498db,  # 青色
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+    payload = {
+        "embeds": [embed]
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(DISCORD_WEBHOOK_URL, json=payload, headers=headers)
+    if response.status_code in [200, 204]:
+        return jsonify({"status": "success"}), 200
+    else:
+        return jsonify({"status": "error", "code": response.status_code}), 500
+
+if __name__ == "__main__":
+    app.run()
+
 
 # 📩 メッセージ監視イベント
 @bot.event
