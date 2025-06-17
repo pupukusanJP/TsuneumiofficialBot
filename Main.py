@@ -23,6 +23,7 @@ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 # --- 定数 ---
 GUILD_ID = 1258077953326190713  # 対象ギルドID
 SPAM_REPORT_CHANNEL_ID = 1376216186257145876  # スパム検知通報用チャンネルID
+CHANNEL_ID = 1384542839119155401 
 
 # --- グローバル変数 ---
 last_spam_report_time = {}  # ユーザーID: datetime 最後のスパム通報時間
