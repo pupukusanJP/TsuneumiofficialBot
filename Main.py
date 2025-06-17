@@ -48,7 +48,7 @@ def send_message():
         title="🎮 プレイヤー参加ログ",
         description=f"{player_name} さんがゲームに参加しました！",
         color=0x3498db,
-        timestamp=datetime.utcnow()
+        timestamp=jst
     )
 
     # 非同期でBotのイベントループ上でメッセージ送信処理を実行
@@ -61,6 +61,31 @@ def send_message():
     asyncio.run_coroutine_threadsafe(send_embed(), bot.loop)
 
     return jsonify({"status": "success"}), 200
+
+@app.route("/esend-message", methods=["POST"])
+def send_message():
+    data = request.get_json()
+    player_name = data.get("player", "Unknown Player")
+
+    # Embedをdiscord.Embedで作成
+    embed = discord.Embed(
+        title="🎮 プレイヤー退出ログ",
+        description=f"{player_name} さんがゲームから退出しました！",
+        color=0x3498db,
+        timestamp=jst
+    )
+
+    # 非同期でBotのイベントループ上でメッセージ送信処理を実行
+    async def send_embed():
+        channel = bot.get_channel(CHANNEL_ID)
+        if channel:
+            await channel.send(embed=embed)
+
+    # discord.pyは非同期なのでasyncio.run_coroutine_threadsafeでイベントループに流す
+    asyncio.run_coroutine_threadsafe(send_embed(), bot.loop)
+
+    return jsonify({"status": "success"}), 200
+
 
 
 # --- Discord Bot設定 ---
