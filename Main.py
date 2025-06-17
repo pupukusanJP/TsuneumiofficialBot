@@ -63,7 +63,7 @@ def send_message():
     return jsonify({"status": "success"}), 200
 
 @app.route("/esend-message", methods=["POST"])
-def send_message():
+def esend_message():
     data = request.get_json()
     player_name = data.get("player", "Unknown Player")
 
