@@ -57,7 +57,8 @@ def home():
 
 # Webサーバーを別スレッドで実行
 def run():
-    app.run(host="0.0.0.0", port=8080)
+    port = int(os.environ.get("PORT", 8080))  # PORT環境変数がRenderで自動的に設定される
+    app.run(host="0.0.0.0", port=port)
 
 def keep_alive():
     t = Thread(target=run)
