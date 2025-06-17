@@ -48,7 +48,7 @@ def send_message():
         title="🎮 プレイヤー参加ログ",
         description=f"{player_name} さんがゲームに参加しました！",
         color=0x3498db,
-        timestamp=jst
+        timestamp=datetime.now(jst)
     )
 
     # 非同期でBotのイベントループ上でメッセージ送信処理を実行
@@ -72,7 +72,7 @@ def esend_message():
         title="🎮 プレイヤー退出ログ",
         description=f"{player_name} さんがゲームから退出しました！",
         color=0x3498db,
-        timestamp=jst
+        timestamp=datetime.now(jst)
     )
 
     # 非同期でBotのイベントループ上でメッセージ送信処理を実行
