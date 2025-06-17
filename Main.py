@@ -13,6 +13,7 @@ from discord.ui import View, Button
 from dotenv import load_dotenv
 
 from flask import Flask, request, jsonify
+import asyncio
 
 # --- 環境変数読み込み ---
 load_dotenv()
