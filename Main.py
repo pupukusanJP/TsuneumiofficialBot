@@ -12,7 +12,7 @@ from discord.ext import commands
 from discord.ui import View, Button
 from dotenv import load_dotenv
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, send_file
 import asyncio
 
 # --- 環境変数読み込み ---
@@ -38,7 +38,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return render_template('TsuneumiBot.html')
+    return send_file('TsuneumiBot.html')
 
 @app.route("/send-message", methods=["POST"])
 def send_message():
