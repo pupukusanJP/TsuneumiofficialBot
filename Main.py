@@ -38,7 +38,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return render_template('Botpage.html')
+    return render_template('TsuneumiBot.html')
 
 @app.route("/send-message", methods=["POST"])
 def send_message():
