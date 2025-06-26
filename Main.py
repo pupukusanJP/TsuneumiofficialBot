@@ -43,6 +43,32 @@ def home():
 @app.route("/send-message", methods=["POST"])
 def send_message():
     data = request.get_json()
+
+    # ここで現在時刻を取得（JSTまたはUTCでOK）
+    current_time = datetime.now(jst)
+
+    embed = discord.Embed(
+        title="🎮 プレイヤーBAN通知",
+        color=0xFF0000,
+        timestamp=datetime.now(timezone.utc)  # Discord用のtimestampはUTC推奨
+    )
+    embed.add_field(name="BAN実行者", value=data.get("ban_executor", "不明"), inline=True)
+    embed.add_field(name="BAN対象", value=data.get("ban_target", "不明"), inline=True)
+    embed.add_field(name="BAN対象ID", value=data.get("ban_target_id", "不明"), inline=True)
+    embed.add_field(name="時刻", value=current_time, inline=False)
+
+    async def send_embed():
+        channel = bot.get_channel(CHANNEL_ID)
+        if channel:
+            await channel.send(embed=embed)
+
+    asyncio.run_coroutine_threadsafe(send_embed(), bot.loop)
+
+    return jsonify({"status": "success"}), 200
+
+@app.route("/send-message", methods=["POST"])
+def send_message():
+    data = request.get_json()
     player_name = data.get("player", "Unknown Player")
 
     # Embedをdiscord.Embedで作成
