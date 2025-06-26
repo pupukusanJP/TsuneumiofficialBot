@@ -25,6 +25,7 @@ GUILD_ID = 1258077953326190713  # 対象ギルドID
 SPAM_REPORT_CHANNEL_ID = 1376216186257145876  # スパム検知通報用チャンネルID
 CHANNEL_ID = 1384542839119155401 
 BAN_CHANNEL = 1387771034668630126
+UNBAN_CHANNEL = 1387775297780187197
 
 # --- グローバル変数 ---
 last_spam_report_time = {}  # ユーザーID: datetime 最後のスパム通報時間
@@ -59,6 +60,31 @@ def ban_mm():
 
     async def send_embed():
         channel = bot.get_channel(BAN_CHANNEL)
+        if channel:
+            await channel.send(embed=embed)
+
+    asyncio.run_coroutine_threadsafe(send_embed(), bot.loop)
+
+    return jsonify({"status": "success"}), 200
+
+@app.route("/unban_mm", methods=["POST"])
+def unban_mm():
+    data = request.get_json()
+
+    current_time = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
+
+    embed = discord.Embed(
+        title="🎮 プレイヤーUNBAN通知",
+        color=0xFF0000,
+        timestamp=datetime.utcnow()  # DiscordはUTC推奨なのでutcnow()で
+    )
+    embed.add_field(name="UNBAN実行者", value=data.get("ban_executor", "不明"), inline=True)
+    embed.add_field(name="UNBAN対象", value=data.get("ban_target", "不明"), inline=True)
+    embed.add_field(name="UNBAN対象ID", value=data.get("ban_target_id", "不明"), inline=True)
+    embed.add_field(name="時刻", value=current_time, inline=False)
+
+    async def send_embed():
+        channel = bot.get_channel(UNBAN_CHANNEL)
         if channel:
             await channel.send(embed=embed)
 
