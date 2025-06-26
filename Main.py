@@ -45,13 +45,12 @@ def home():
 def ban_mm():
     data = request.get_json()
 
-    # ここで現在時刻を取得（JSTまたはUTCでOK）
-    current_time = datetime.now(jst)
+    current_time = datetime.now(jst).strftime("%Y-%m-%d %H:%M:%S")
 
     embed = discord.Embed(
         title="🎮 プレイヤーBAN通知",
         color=0xFF0000,
-        timestamp=datetime.now(timezone.utc)  # Discord用のtimestampはUTC推奨
+        timestamp=datetime.utcnow()  # DiscordはUTC推奨なのでutcnow()で
     )
     embed.add_field(name="BAN実行者", value=data.get("ban_executor", "不明"), inline=True)
     embed.add_field(name="BAN対象", value=data.get("ban_target", "不明"), inline=True)
