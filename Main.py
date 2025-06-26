@@ -24,6 +24,7 @@ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 GUILD_ID = 1258077953326190713  # 対象ギルドID
 SPAM_REPORT_CHANNEL_ID = 1376216186257145876  # スパム検知通報用チャンネルID
 CHANNEL_ID = 1384542839119155401 
+BAN_CHANNEL = 1387771034668630126
 
 # --- グローバル変数 ---
 last_spam_report_time = {}  # ユーザーID: datetime 最後のスパム通報時間
@@ -40,8 +41,8 @@ app = Flask(__name__)
 def home():
     return send_file('TsuneumiBot.html')
 
-@app.route("/send-message", methods=["POST"])
-def send_message():
+@app.route("/ban_mm", methods=["POST"])
+def ban_mm():
     data = request.get_json()
 
     # ここで現在時刻を取得（JSTまたはUTCでOK）
@@ -58,7 +59,7 @@ def send_message():
     embed.add_field(name="時刻", value=current_time, inline=False)
 
     async def send_embed():
-        channel = bot.get_channel(CHANNEL_ID)
+        channel = bot.get_channel(BAN_CHANNEL)
         if channel:
             await channel.send(embed=embed)
 
